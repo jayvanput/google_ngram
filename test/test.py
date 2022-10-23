@@ -30,5 +30,7 @@ class TestGoogleNgram(unittest.TestCase):
         ngram.request_data()
 
         self.assertEqual(len(ngram.data), 2)
+
+    
 if __name__ == "__main__":
     unittest.main()

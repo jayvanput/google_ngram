@@ -13,29 +13,31 @@ class GoogleNgram:
         self.params: typing.Dict[str, typing.Any] = {}
 
     def set_param(self, param: str, value: str):
+        """Adds a new parameter to the params dict. Content can have multiple values so we append."""
         if param == "content" and self.params.get("content",False):
             self.params[param] += f",{value}"
         else:
             self.params[param] = value
 
-    def update_url(self) -> None:
+    def update_url(self) -> str:
         """Update the url with the latest parameters."""
 
-        url = "https://books.google.com/ngrams/json?"
+        url: str = "https://books.google.com/ngrams/json?"
 
         for key, value in self.params.items():
             if url[-1] == "?":
                 url = f"{url}{key}={value}"
             else:
                 url = f"{url}&{key}={value}"
-        self._url = url
+        return url
+
 
     def _set_data(self, data: typing.Dict[str, typing.Any]) -> None:
         self.data = data
 
     def request_data(self) -> typing.Dict[str, typing.Any]:
         """Call data from the built URL. Raises exception if the request doesn't return any data."""
-        self.update_url()
+        self._url = self.update_url()
         
         response = requests.get(self._url)
         
