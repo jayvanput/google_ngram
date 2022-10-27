@@ -1,61 +1,21 @@
+import json
 import requests
-import typing
+from typing import List, Dict, Union
 from dataclasses import dataclass
 
-class Params:
-    content: str
     
-class GoogleNgram:
-    """Google Ngram object for storing parameters and JSON output."""
-    def __init__(self) -> None:
-        self._url = "https://books.google.com/ngrams/json?"
-        self.data: typing.Dict[str, typing.Any] = {}
-        self.params: typing.Dict[str, typing.Any] = {}
 
-    def set_param(self, param: str, value: str):
-        """Adds a new parameter to the params dict. Content can have multiple values so we append."""
-        if param == "content" and self.params.get("content",False):
-            self.params[param] += f",{value}"
-        else:
-            self.params[param] = value
+def request(content: Union[str, List[str]]="Albert Einstein", start_year: int=1800, end_year: int=2019, corpus: str="English (2019)", case_insensitve: bool=False, smoothing: int=3) -> List[Dict[str, Union[str, List[float]]]]:
+    """Makes a request to the Google Ngram Viewer 'api' and returns the JSON response."""
+    BASE_URL = "https://books.google.com/ngrams/json?"
+    
+    content_str: str = "content="
+    if isinstance(content, list):
+        content_str += "%2C".join(content)
+    else:
+        content_str += content
 
-    def update_url(self) -> str:
-        """Update the url with the latest parameters."""
-
-        url: str = "https://books.google.com/ngrams/json?"
-
-        for key, value in self.params.items():
-            if url[-1] == "?":
-                url = f"{url}{key}={value}"
-            else:
-                url = f"{url}&{key}={value}"
-        return url
-
-
-    def _set_data(self, data: typing.Dict[str, typing.Any]) -> None:
-        self.data = data
-
-    def request_data(self) -> typing.Dict[str, typing.Any]:
-        """Call data from the built URL. Raises exception if the request doesn't return any data."""
-        self._url = self.update_url()
-        
-        response = requests.get(self._url)
-        
-        data = {}
-        for ngram in response.json():
-            word = ngram["ngram"]
-            time_series = ngram["timeseries"]
-
-            data[word] = time_series
-
-        self._set_data(data)
-
-        if not self.data:
-            self._set_data({})
-            raise Exception("The URL did not return any data.")
-        return self.data
-
-if __name__ == "__main__":
-    test = GoogleNgram()
-    test.set_param("content","Albert+Einstein")
-    print(test._url, type(test.request_data()), test.request_data())
+    url = BASE_URL + f"{content_str}"
+    output = requests.get(url).json()
+    print(type(output))
+    return output
