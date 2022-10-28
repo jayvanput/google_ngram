@@ -6,15 +6,18 @@ import unittest
 class TestGoogleNgram(unittest.TestCase):
 
     def test_request_returns_a_list(self):
-        output = google_ngram.request()
+        output = google_ngram.request("Albert Einstein")
 
         self.assertIsInstance(output, List)
 
-    def test_default_request_returns_albert(self):
-        output = google_ngram.request()
+    def test_empty_request_raises_error(self):
 
-        self.assertEqual(output[0]["ngram"], "Albert Einstein")
+        self.assertRaises(google_ngram.NoResultsError, google_ngram.request)
         
+    def test_invalid_content_raises_error(self):
+
+        self.assertRaises(google_ngram.NoResultsError, google_ngram.request, "asdfasdfasdf")
+
     def test_request_returns_input(self):
         output = google_ngram.request("Frankenstein")
 
