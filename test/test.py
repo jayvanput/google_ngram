@@ -3,34 +3,48 @@ from typing import List
 import google_ngram
 import unittest
 
-class TestGoogleNgram(unittest.TestCase):
+class TestGoogleNgramRequestOne(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.request = google_ngram.Request()
 
     def test_request_returns_a_list(self):
-        output = google_ngram.request("Albert Einstein")
+        output = self.request.request_one("Albert Einstein")
 
         self.assertIsInstance(output, List)
 
     def test_empty_request_raises_error(self):
 
-        self.assertRaises(google_ngram.NoResultsError, google_ngram.request)
+        self.assertRaises(google_ngram.NoResultsError, self.request.request_one)
         
     def test_invalid_content_raises_error(self):
 
-        self.assertRaises(google_ngram.NoResultsError, google_ngram.request, "asdfasdfasdf")
+        self.assertRaises(google_ngram.NoResultsError, self.request.request_one, "asdfasdfasdf")
+
+    def test_integer_arg_fails(self):
+
+        self.assertRaises(TypeError, self.request.request_one, 1)
 
     def test_request_returns_input(self):
-        output = google_ngram.request("Frankenstein")
+        output = self.request.request_one("Frankenstein")
 
         self.assertEqual(output[0]["ngram"], "Frankenstein")
 
-    def test_request_with_multiple_request_values(self):
-        output = google_ngram.request(["Albert Einstein", "Frankenstein"])
+    def test_request_fails_with_collection(self):
 
-        self.assertEqual(output[0]["ngram"], "Albert Einstein")
-        self.assertEqual(output[1]["ngram"], "Frankenstein")
+        self.assertRaises(TypeError, self.request.request_one,[])
+        self.assertRaises(TypeError, self.request.request_one, {})
+        self.assertRaises(TypeError, self.request.request_one, set())
 
-    def test_can_add_content_for_request(self):
-        pass
+    def test_request_case_insensitive_returns_list(self):
+        self.request.set_parameter("case_insensitive", True)
+
+        output = self.request.request_one("Albert Einstein")
+        self.assertEqual(output[0]["ngram"], "Albert Einstein (All)")
+
+    def test_improper_parameter_set(self):
+
+        self.assertRaises(AttributeError, self.request.set_parameter, "bad_parameter", "value")
 #     def test_request_returns_dict(self):
 #         ngram = google_ngram.GoogleNgram()
 #         ngram.set_param("content", "Albert+Einstein")

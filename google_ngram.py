@@ -1,5 +1,5 @@
 import requests
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Literal, Any
 
 
 class NoResultsError(BaseException):
@@ -8,23 +8,49 @@ class NoResultsError(BaseException):
         self.content = content
 
     def __str__(self):
-        return f"There are no results for the string {self.content}"
+        return f"There are no results for the url {self.content}"
+class Request:
 
-def request(content: Union[str, List[str]]="", start_year: int=1800, end_year: int=2019, corpus: str="English (2019)", case_insensitve: bool=False, smoothing: int=3) -> List[Dict[str, Union[str, List[float]]]]:
-    """Makes a request to the Google Ngram Viewer 'api' and returns the JSON response."""
-    BASE_URL = "https://books.google.com/ngrams/json?"
+    def __init__(self):
+        self.query_strings: Dict[str, Any] = {
+        "start_year": None,
+        "end_year": None,
+        "corpus": None,
+        "case_insensitive": None,
+        "smoothing": None
+        }
     
-    content_str: str = "content="
+    QUERYSTRINGS = ["start_year", "end_year", "corpus", "case_insensitive", "smoothing"]
+    
+    def set_parameter(self, parameter: Literal["start_year", "end_year", "corpus", "case_insensitive", "smoothing"], value) -> None:
+        """Set the query string in the object for any request calls."""
+        if parameter in self.QUERYSTRINGS:
+            self.query_strings[parameter] = value
+        else:
+            raise AttributeError()
 
-    # Handle cases for list or string.
-    if isinstance(content, list):
-        content_str += "%2C".join(content)
-    else:
-        content_str += content
+    def _construct_url(self, content: str):
+        BASE_URL = "https://books.google.com/ngrams/json?"
 
-    url = BASE_URL + f"{content_str}"
-    output = requests.get(url).json()
-    if not output:
-        raise NoResultsError(content_str)
+        content_str: str = "content=" + str(content).replace(" ","+")
+        url = BASE_URL + f"{content_str}"
 
-    return output
+        for attribute, value in self.query_strings.items():
+            if value:
+                url += f"&{attribute}={value}"
+
+        return url
+
+    def request_one(self, content: str="") -> List[Dict[str, Union[str, List[float]]]]:
+        """Makes a request to the Google Ngram Viewer 'api' and returns the JSON response."""
+        
+        if not isinstance(content, str):
+            raise TypeError(f"Request expects a string argument but got {type(content)}.")
+        
+        url = self._construct_url(content=content)
+
+        output = requests.get(url).json()
+        if not output:
+            raise NoResultsError(url)
+
+        return output
